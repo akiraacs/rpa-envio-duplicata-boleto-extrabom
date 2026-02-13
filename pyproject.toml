@@ -1,0 +1,44 @@
+[project]
+name = "bot-ext-003"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = []
+
+[tool.ruff]
+line-length = 130
+
+[tool.ruff.lint]
+extend-select = [
+  "D", # pydocstyle: Verifica se as docstrings seguem padrões de estilo e formatação (PEP 257).
+  "E", # pycodestyle: Verifica erros de estilo como indentação, espaços em branco, etc.
+  "B", # flake8-bugbear: Detecta padrões problemáticos e code smells comuns no código Python.
+  "SIM", # flake8-simplify: Sugere simplificações de código redundante ou desnecessariamente complexo.
+  "I", # isort: Garante ordenação consistente e correta dos imports.
+  "RET", # flake8-return: Detecta problemas no uso de `return`, como valores inconsistentes.
+  "SLF", # flake8-self: Detecta erros comuns no uso do `self` em métodos de classes.
+  "ARG", # flake8-unused-arguments: Detecta argumentos de função não utilizados.
+  "PL", # Pylint: Linter completo e configurável para Python, com erros (PLE), avisos (PLW), refatorações (PLR), convenções (PLC).
+  "ANN", # flake8-annotations: Verifica se funções têm anotações de tipo (type hints).
+  "PIE", # flake8-pie: Sugere boas práticas e detecta construções de código desnecessárias.
+  "T20", # flake8-print: Garante que `print()` não seja utilizado em código de produção.
+  "Q", # flake8-quotes: Garante o uso consistente de aspas simples ou duplas.
+]
+extend-ignore = [
+  "D100", # Missing docstring in public module
+  "D413", # No blank lines allowed after function docstring
+  "D104", # Missing docstring in public package
+  "D415", # First line should end with a period, question mark, or exclamation point
+  "B904", # Within an `except` clause, raise exceptions with `raise ... from err` or `raise ... from None` to distinguish them from errors in exception handling
+  "PLR0912", # Too many branches
+]
+ 
+[tool.ruff.lint.pydocstyle]
+convention = "google" # Padrão de docstring
+ 
+[dependency-groups]
+dev = [
+    "pre-commit>=4.3.0",
+    "ruff>=0.12.7",
+]
