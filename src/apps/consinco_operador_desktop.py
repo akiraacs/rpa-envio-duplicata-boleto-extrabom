@@ -32,6 +32,8 @@ class ConsincoOperadorDesktop:
 
         self.janela_principal: Optional[pywinauto.WindowSpecification] = None
         self.janela_emissao_duplicatas_boletos: Optional[pywinauto.WindowSpecification] = None
+        self.janela_atencao: Optional[pywinauto.WindowSpecification] = None
+        self.janela_aviso: Optional[pywinauto.WindowSpecification] = None
         self.app_principal: Application = self._logar()
 
 
@@ -123,8 +125,12 @@ class ConsincoOperadorDesktop:
 
 
     @retry(stop=stop_after_attempt(3), wait=wait_fixed(2))
-    def filtrar_todos_titulos_por_data(self, data_consulta: str) -> tuple[bool, str]:
-        """Define os filtros para a consulta de titulos por data e tipo 'Todos'."""
+    def consultar_titulos(self, data_consulta: str) -> None:
+        """Consulta os títulos de duplicatas/boletos para a data de consulta informada.
+
+        Args:
+            data_consulta (str): Data de consulta.
+        """
         try:
             self.janela_principal.set_focus()
             self.janela_emissao_duplicatas_boletos.set_focus()
@@ -159,16 +165,32 @@ class ConsincoOperadorDesktop:
             logger.info('Selecionado "Todas(os)" na opção Buscar Duplicatas/Boletos')
             time.sleep(0.2)
 
-            self.janela_emissao_duplicatas_boletos.set_focus()
-            time.sleep(0.2)
-            self.janela_principal["Button28"].click_input()
-
             # Buscar Duplicatas/Boletos
             self.janela_emissao_duplicatas_boletos.set_focus()
             self.janela_emissao_duplicatas_boletos.type_keys("{F8}")
             self.app_principal.wait_cpu_usage_lower(threshold=0.7, timeout=60)
             logger.info("Consultando dados...")
             time.sleep(5)
+
+        except Exception as error:
+            msg_error = f"Erro ao consultar titulos na data {data_consulta}: {error}"
+            logger.error(msg_error)
+            raise Exception(msg_error)
+
+
+    @retry(stop=stop_after_attempt(3), wait=wait_fixed(2))
+    def agendar_envio_email_titulos(self, data_consulta: str) -> tuple[bool, str]:
+        """Agenda o envio de e-mail com os títulos de duplicatas/boletos para o data de consulta informada.
+
+        Args:
+            data_consulta (str): Data de consulta.
+
+        Returns:
+            tuple[bool, str]: Retorna uma tupla com o resultado da execução do método e uma mensagem de sucesso ou erro.
+        """
+        try:
+            self.janela_principal.set_focus()
+            self.janela_emissao_duplicatas_boletos.set_focus()
 
             # Selecionar todos os títulos
             img_btn_selecionar_todos_titulos = pyscreeze.locateOnScreen("resources/images/btn_selecionar_todos_titulos.png", confidence=0.8)
@@ -186,39 +208,60 @@ class ConsincoOperadorDesktop:
 
             self.janela_principal.set_focus()
             time.sleep(0.3)
-            popup_atencao = self.janela_principal.child_window(title="Atenção", control_type="Window")
-            if not popup_atencao.exists(timeout=5):
-                raise Exception('Não foi possível localizar o popup de "Atenção" após clicar no botão "Enviar Boletos por Email"')
+            self.janela_atencao = self.janela_principal.child_window(title="Atenção", control_type="Window")
+            if not self.janela_atencao.exists(timeout=5):
+                raise Exception('Não foi possível localizar o janela de "Atenção" após clicar no botão "Enviar Boletos por Email"')
 
             # Verifica se há mensagem de erro ou de sucesso no envio de boletos por e-mail
-            msg_popup_atencao = popup_atencao.child_window(control_type="Text", found_index=1).window_text()
+            msg_janela_atencao = self.janela_atencao.child_window(control_type="Text", found_index=1).window_text()
 
-            if "Nenhum título selecionado" in msg_popup_atencao:
-                return False, f"Não possui titulos disponíveis para a data consultada: {data_consulta}"
+            if "Nenhum título selecionado" in msg_janela_atencao:
+                self._fechar_janelas_atencao_aviso()
+                return False, f"Não possui titulos disponíveis para a data consultada"
 
-            elif "enviar por e-mail os títulos selecionados" in msg_popup_atencao:
+            elif "enviar por e-mail os títulos selecionados" in msg_janela_atencao:
+                self.janela_principal.set_focus()
                 try:
-                    popup_atencao.child_window(title="Sim", control_type="Button").click_input()
+                    self.janela_atencao.child_window(title="Sim", control_type="Button").click_input()
                 except:
-                    popup_atencao.child_window(title="Yes", control_type="Button").click_input()
-                time.sleep(1)
+                    self.janela_atencao.child_window(title="Yes", control_type="Button").click_input()
+                time.sleep(1.5)
 
-                popup_aviso_envio_email = self.janela_principal.child_window(title="Aviso", control_type="Window")
-                if not popup_aviso_envio_email.exists(timeout=5):
-                    raise Exception('Não foi possível localizar o popup de "Aviso" informando que o envio de boletos por e-mail foi agendado com sucesso')
+                self.janela_aviso = self.janela_principal.child_window(title="Aviso", control_type="Window")
+                if not self.janela_aviso.exists(timeout=5):
+                    raise Exception('Não foi possível localizar o janela de "Aviso" informando que o envio de boletos por e-mail foi agendado com sucesso')
 
-                return True, None
+                self._fechar_janelas_atencao_aviso()
+                return True, "Envio de boletos por e-mail agendado com sucesso"
 
             else:
                 raise Exception(
-                    f"Não foi possível identificar no popup de Atenção a mensagem que diz se há ou não titulos para enviar por e-mail. \
+                    f"Não foi possível identificar no janela de Atenção a mensagem que diz se há ou não titulos para enviar por e-mail. \
                     Favor verificar execução ou mensagens mapeadas"
                 )
 
         except Exception as error:
-            msg_error = f"Erro ao filtrar lançamentos por data, caixa e tipo 'Todos': {error}"
+            self._fechar_janelas_atencao_aviso()
+            msg_error = f"Erro ao agendar o envio de e-mail para os títulos consultados: {error}"
             logger.error(msg_error)
+
+            self.consultar_titulos(data_consulta=data_consulta)
             raise Exception(msg_error)
+
+
+    def _fechar_janelas_atencao_aviso(self) -> None:
+        """Fecha todos os janelas de atenção e avisos da janela principal do Consinco Operador."""
+        try:
+            if self.janela_atencao and self.janela_atencao.exists():
+                self.janela_atencao.close()
+                time.sleep(0.2)
+
+            if self.janela_aviso and self.janela_aviso.exists():
+                self.janela_aviso.close()
+                time.sleep(0.2)
+
+        except Exception as error:
+            raise Exception(f"Erro ao fechar janelas de atenção e avisos da janela principal do Consinco Operador: {error}")
 
 
     def fechar_sistema(self) -> None:
