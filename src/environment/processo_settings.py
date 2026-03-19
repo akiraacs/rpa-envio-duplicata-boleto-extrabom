@@ -8,26 +8,18 @@ from src.utils import tratamento_datas
 
 class ProcessoSettings(BaseSettings):
     """Variáveis de ambiente relacionadas ao Consinco."""
-    data_conciliacao: str = tratamento_datas.calcular_data(dias=1, direcao=tratamento_datas.DirecaoCalculo.ANTERIOR)
-    usuario_permissao_caixa: str = "MARILIAPR"
+    data_emissao_filtro: str = tratamento_datas.calcular_data(dias=1, direcao=tratamento_datas.DirecaoCalculo.ANTERIOR)
 
 
-    @field_validator("data_conciliacao", mode="before")
+    @field_validator("data_emissao_filtro", mode="before")
     @classmethod
     def validar_data(cls, v: str) -> str:
         if not v:
-            return cls.model_fields["data_conciliacao"].default
+            return cls.model_fields["data_emissao_filtro"].default
         try:
             datetime.strptime(v, "%d/%m/%Y")
         except ValueError:
-            raise ValueError(f"data_conciliacao deve estar no formato dd/mm/aaaa, recebido: '{v}'")
-        return v
-
-    @field_validator("usuario_permissao_caixa", mode="before")
-    @classmethod
-    def usar_default_se_vazio(cls, v):
-        if not v:
-            return cls.model_fields["usuario_permissao_caixa"].default
+            raise ValueError(f"data_emissao_filtro deve estar no formato dd/mm/aaaa, recebido: '{v}'")
         return v
 
 
