@@ -123,7 +123,7 @@ class ConsincoOperadorDesktop:
 
 
     @retry(stop=stop_after_attempt(3), wait=wait_fixed(2))
-    def filtrar_todos_titulos_por_data(self, data_consulta: str) -> None:
+    def filtrar_todos_titulos_por_data(self, data_consulta: str) -> tuple[bool, str]:
         """Define os filtros para a consulta de titulos por data e tipo 'Todos'."""
         try:
             self.janela_principal.set_focus()
@@ -158,7 +158,7 @@ class ConsincoOperadorDesktop:
             btn_buscar_todos.click_input()
             logger.info('Selecionado "Todas(os)" na opção Buscar Duplicatas/Boletos')
             time.sleep(0.2)
-            
+
             self.janela_emissao_duplicatas_boletos.set_focus()
             time.sleep(0.2)
             self.janela_principal["Button28"].click_input()
@@ -170,20 +170,50 @@ class ConsincoOperadorDesktop:
             logger.info("Consultando dados...")
             time.sleep(5)
 
-
+            # Selecionar todos os títulos
             img_btn_selecionar_todos_titulos = pyscreeze.locateOnScreen("resources/images/btn_selecionar_todos_titulos.png", confidence=0.8)
             if not img_btn_selecionar_todos_titulos:
                 raise Exception("Não foi possível localizar por imagem o botão 'Selecionar Todos os Títulos'")
             pyautogui.click(pyautogui.center(img_btn_selecionar_todos_titulos))
             time.sleep(0.5)
 
+            # Enviar boletos por email
             img_btn_enviar_boletos_email = pyscreeze.locateOnScreen("resources/images/btn_enviar_boletos_email.png", confidence=0.8)
             if not img_btn_enviar_boletos_email:
                 raise Exception("Não foi possível localizar por imagem o botão 'Enviar Boletos por Email'")
             pyautogui.click(pyautogui.center(img_btn_enviar_boletos_email))
             time.sleep(3)
 
-            ...
+            self.janela_principal.set_focus()
+            time.sleep(0.3)
+            popup_atencao = self.janela_principal.child_window(title="Atenção", control_type="Window")
+            if not popup_atencao.exists(timeout=5):
+                raise Exception('Não foi possível localizar o popup de "Atenção" após clicar no botão "Enviar Boletos por Email"')
+
+            # Verifica se há mensagem de erro ou de sucesso no envio de boletos por e-mail
+            msg_popup_atencao = popup_atencao.child_window(control_type="Text", found_index=1).window_text()
+
+            if "Nenhum título selecionado" in msg_popup_atencao:
+                return False, f"Não possui titulos disponíveis para a data consultada: {data_consulta}"
+
+            elif "enviar por e-mail os títulos selecionados" in msg_popup_atencao:
+                try:
+                    popup_atencao.child_window(title="Sim", control_type="Button").click_input()
+                except:
+                    popup_atencao.child_window(title="Yes", control_type="Button").click_input()
+                time.sleep(1)
+
+                popup_aviso_envio_email = self.janela_principal.child_window(title="Aviso", control_type="Window")
+                if not popup_aviso_envio_email.exists(timeout=5):
+                    raise Exception('Não foi possível localizar o popup de "Aviso" informando que o envio de boletos por e-mail foi agendado com sucesso')
+
+                return True, None
+
+            else:
+                raise Exception(
+                    f"Não foi possível identificar no popup de Atenção a mensagem que diz se há ou não titulos para enviar por e-mail. \
+                    Favor verificar execução ou mensagens mapeadas"
+                )
 
         except Exception as error:
             msg_error = f"Erro ao filtrar lançamentos por data, caixa e tipo 'Todos': {error}"
