@@ -170,7 +170,7 @@ class ConsincoOperadorDesktop:
             self.janela_emissao_duplicatas_boletos.type_keys("{F8}")
             self.app_principal.wait_cpu_usage_lower(threshold=0.7, timeout=60)
             logger.info("Consultando dados...")
-            time.sleep(5)
+            time.sleep(10)
 
         except Exception as error:
             msg_error = f"Erro ao consultar titulos na data {data_consulta}: {error}"
@@ -191,19 +191,22 @@ class ConsincoOperadorDesktop:
         try:
             self.janela_principal.set_focus()
             self.janela_emissao_duplicatas_boletos.set_focus()
+            time.sleep(1)
 
             # Selecionar todos os títulos
             img_btn_selecionar_todos_titulos = pyscreeze.locateOnScreen("resources/images/btn_selecionar_todos_titulos.png", confidence=0.8)
             if not img_btn_selecionar_todos_titulos:
                 raise Exception("Não foi possível localizar por imagem o botão 'Selecionar Todos os Títulos'")
             pyautogui.click(pyautogui.center(img_btn_selecionar_todos_titulos))
-            time.sleep(0.5)
+            logger.info("Botão 'Selecionar Todos os Títulos' clicado")
+            time.sleep(1.5)
 
             # Enviar boletos por email
             img_btn_enviar_boletos_email = pyscreeze.locateOnScreen("resources/images/btn_enviar_boletos_email.png", confidence=0.8)
             if not img_btn_enviar_boletos_email:
                 raise Exception("Não foi possível localizar por imagem o botão 'Enviar Boletos por Email'")
             pyautogui.click(pyautogui.center(img_btn_enviar_boletos_email))
+            logger.info("Botão 'Enviar Boletos por Email' clicado")
             time.sleep(3)
 
             self.janela_principal.set_focus()
