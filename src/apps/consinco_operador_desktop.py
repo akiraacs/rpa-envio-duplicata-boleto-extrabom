@@ -199,17 +199,18 @@ class ConsincoOperadorDesktop:
                 raise Exception("Não foi possível localizar por imagem o botão 'Selecionar Todos os Títulos'")
             pyautogui.click(pyautogui.center(img_btn_selecionar_todos_titulos))
             logger.info("Botão 'Selecionar Todos os Títulos' clicado")
-            time.sleep(10) # teste
+            time.sleep(1.5)
 
             # Enviar boletos por email
-            img_btn_enviar_boletos_email = pyscreeze.locateOnScreen("resources/images/btn_enviar_boletos_email_2.png", confidence=0.8) # teste
+            img_btn_enviar_boletos_email = pyscreeze.locateOnScreen("resources/images/btn_enviar_boletos_email.png", confidence=0.8) # teste
             if not img_btn_enviar_boletos_email:
                 raise Exception("Não foi possível localizar por imagem o botão 'Enviar Boletos por Email'")
             pyautogui.click(pyautogui.center(img_btn_enviar_boletos_email))
             logger.info("Botão 'Enviar Boletos por Email' clicado")
             time.sleep(3)
 
-            # teste sem focus
+            self.janela_principal.set_focus()
+            time.sleep(0.3)
             self.janela_atencao = self.janela_principal.child_window(title="Atenção", control_type="Window")
             if not self.janela_atencao.exists(timeout=5):
                 raise Exception('Não foi possível localizar o janela de "Atenção" após clicar no botão "Enviar Boletos por Email"')
