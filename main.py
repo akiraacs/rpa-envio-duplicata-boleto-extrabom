@@ -4,7 +4,11 @@ import src.config.logger
 from src.apps.consinco_operador_desktop import ConsincoOperadorDesktop
 from src.config.settings import settings
 from src.packages.email import Email
-from src.utils.comandos_cmd import executar_cmds_manter_sessao_ativa, fechar_sistemas_legados
+from src.utils.comandos_cmd import (executar_cmds_manter_sessao_ativa,
+                                    fechar_sistemas_legados)
+from src.utils.tratamento_datas import (obter_datas_execucao_sucesso,
+                                        obter_qtd_especifica_datas_passadas,
+                                        salvar_datas_execucao_sucesso)
 
 
 def main() -> None:
@@ -13,9 +17,10 @@ def main() -> None:
         nome_rpa = "Envio de Duplicatas/Boletos"
         logger.info(f"Iniciando robô - {nome_rpa}")
         execucao_com_erro = False
-        app_consinco_operador:ConsincoOperadorDesktop = None
+        app_consinco_operador: ConsincoOperadorDesktop = None
         msg_erro = ""
         msg_data_tratativa = f"Data considerada para consulta/tratativa: {settings.processo.data_emissao_filtro}"
+        datas_execucao_sucesso = obter_datas_execucao_sucesso(arquivo=settings.caminho.arquivo_datas_exec_sucesso)
         logger.info(msg_data_tratativa)
 
         # Inicializa variaveis para envio de e-mail
@@ -42,6 +47,11 @@ def main() -> None:
             corpo_email += f"{msg_retorno}\n"
             logger.warning(msg_retorno)
 
+        # Adiciona a data de execução no arquivo datas de execuções bem sucedidas
+        if settings.processo.data_emissao_filtro not in datas_execucao_sucesso:
+            datas_execucao_sucesso.append(settings.processo.data_emissao_filtro)
+            salvar_datas_execucao_sucesso(arquivo=settings.caminho.arquivo_datas_exec_sucesso, datas_execucao_sucesso=datas_execucao_sucesso)
+
         logger.success(f"Processo {nome_rpa} executado com sucesso")
 
     except Exception as error:
@@ -66,6 +76,16 @@ def main() -> None:
                 email.enviar_email()
             except Exception as error_email:
                 logger.error(f"Erro ao enviar e-mail de status: {error_email}")
+
+
+        # Valida se ha datas sem execução de sucesso para iniciar uma nova execucao no sinfonia
+        datas_execucao_sucesso = obter_datas_execucao_sucesso(arquivo=settings.caminho.arquivo_datas_exec_sucesso)
+        if datas_execucao_sucesso:
+            datas_cinco_dias_atras = obter_qtd_especifica_datas_passadas(qtd=5)
+
+            for data_passada in datas_cinco_dias_atras:
+                if data_passada not in datas_execucao_sucesso:
+                    ... # Nova exec sinfonia
 
         logger.info("Finalizando processo...")
 
