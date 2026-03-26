@@ -11,7 +11,6 @@ from pywinauto.application import Application
 from tenacity import retry, stop_after_attempt, wait_fixed
 
 from src.config.settings import settings
-from src.models.lancamento_conta_corrente import LancamentoContaCorrente
 
 JANELA_OPERADOR_PRINCIPAL = ".*Operador Financeiro*"
 JANELA_EMISSAO_DUPLICATAS_BOLETOS = ".*Emissão de Duplicatas/Boletos*"
@@ -50,7 +49,7 @@ class ConsincoOperadorDesktop:
             raise Exception(f"Erro ao encerrar janelas internas | error: {error}")
 
 
-    @retry(stop=stop_after_attempt(3), wait=wait_fixed(5))
+    @retry(stop=stop_after_attempt(3), wait=wait_fixed(5), reraise=True)
     def _logar(self) -> Application:
         """Inicia o processo e realiza login com tratamento de tentativas."""
         try:
@@ -90,7 +89,7 @@ class ConsincoOperadorDesktop:
             raise Exception(msg_error)
 
 
-    @retry(stop=stop_after_attempt(3), wait=wait_fixed(2))
+    @retry(stop=stop_after_attempt(3), wait=wait_fixed(2), reraise=True)
     def acessar_tela_emissao_duplicatas_boletos(self) -> None:
         """Abre a tela de lançamentos do conta corrente utilizando atalhos de teclado."""
         try:
@@ -124,7 +123,7 @@ class ConsincoOperadorDesktop:
             raise Exception(msg_error)
 
 
-    @retry(stop=stop_after_attempt(3), wait=wait_fixed(2))
+    @retry(stop=stop_after_attempt(3), wait=wait_fixed(2), reraise=True)
     def consultar_titulos(self, data_consulta: str) -> None:
         """Consulta os títulos de duplicatas/boletos para a data de consulta informada.
 
@@ -178,7 +177,7 @@ class ConsincoOperadorDesktop:
             raise Exception(msg_error)
 
 
-    @retry(stop=stop_after_attempt(3), wait=wait_fixed(2))
+    @retry(stop=stop_after_attempt(3), wait=wait_fixed(2), reraise=True)
     def agendar_envio_email_titulos(self, data_consulta: str) -> tuple[bool, str]:
         """Agenda o envio de e-mail com os títulos de duplicatas/boletos para o data de consulta informada.
 
@@ -210,7 +209,7 @@ class ConsincoOperadorDesktop:
             time.sleep(3)
 
             self.janela_principal.set_focus()
-            time.sleep(0.3)
+            time.sleep(0.5)
             self.janela_atencao = self.janela_principal.child_window(title="Atenção", control_type="Window")
             if not self.janela_atencao.exists(timeout=5):
                 raise Exception('Não foi possível localizar o janela de "Atenção" após clicar no botão "Enviar Boletos por Email"')
