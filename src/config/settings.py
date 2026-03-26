@@ -4,11 +4,13 @@ from src.environment.caminhos_settings import CaminhosSettings
 from src.environment.consinco_settings import ConsincoSettings
 from src.environment.email_settings import EmailSettings
 from src.environment.processo_settings import ProcessoSettings
+from src.environment.sinfonia_settings import SinfoniaSettings
 
 
 class Settings(BaseSettings):
     """Configurações do robô."""
     consinco: ConsincoSettings = ConsincoSettings()
+    sinfonia: SinfoniaSettings = SinfoniaSettings()
     processo: ProcessoSettings = ProcessoSettings()
     email: EmailSettings = EmailSettings()
     caminho: CaminhosSettings = CaminhosSettings()
