@@ -1,7 +1,10 @@
+import random
+
 from loguru import logger
 
 import src.config.logger
 from src.apps.consinco_operador_desktop import ConsincoOperadorDesktop
+from src.apps.sinfonia_api import SinfoniaApi
 from src.config.settings import settings
 from src.packages.email import Email
 from src.utils.comandos_cmd import (executar_cmds_manter_sessao_ativa,
@@ -81,11 +84,15 @@ def main() -> None:
         # Valida se ha datas sem execução de sucesso para iniciar uma nova execucao no sinfonia
         datas_execucao_sucesso = obter_datas_execucao_sucesso(arquivo=settings.caminho.arquivo_datas_exec_sucesso)
         if datas_execucao_sucesso:
-            datas_cinco_dias_atras = obter_qtd_especifica_datas_passadas(qtd=5)
+            # Randomiza a ordem dos dados para evitar que a execução seja sempre na mesma data em caso de erros consecutivos
+            datas_cinco_dias_atras = random.sample(obter_qtd_especifica_datas_passadas(qtd=5), 5)
 
             for data_passada in datas_cinco_dias_atras:
                 if data_passada not in datas_execucao_sucesso:
-                    ... # Nova exec sinfonia
+                    logger.info(f"Iniciando nova execução do sinfonia: {data_passada}")
+                    sinfonia_api = SinfoniaApi(data_tratativa=data_passada)
+                    sinfonia_api.acionar_nova_execucao()
+                    break # Deve fazer uma execucao por vez
 
         logger.info("Finalizando processo...")
 
