@@ -68,6 +68,15 @@ O robo:
 - Credenciais validas de Consinco, SMTP e API Sinfonia.
 
 ## Instalacao
+
+O projeto possui suporte para gerenciamento de dependências via `uv` (recomendado) ou via `pip`.
+
+**Usando uv (Recomendado):**
+```bash
+uv sync
+```
+
+**Usando venv e pip:**
 ```bash
 python -m venv .venv
 .venv\Scripts\activate
@@ -89,6 +98,8 @@ ERP_CONSINCO_SENHA="@senha"
 
 # Caminhos
 CAMINHO_EXE_ERP_MODULO_OPERADOR="C:\C5Client\Financeiro\Operador.exe"
+CAMINHO_ONEDRIVE_ROBO="C:\Users\robo\OneDrive - Extrabom Supermercados\RPA-PYTHON\bot-envio-duplicata-boleto"
+CAMINHO_ARQUIVO_DATAS_EXECUCAO="C:\Users\robo\OneDrive - Extrabom Supermercados\RPA-PYTHON\bot-envio-duplicata-boleto\datas_execucao.json"
 
 # E-mail
 ENVIAR_EMAIL=False
