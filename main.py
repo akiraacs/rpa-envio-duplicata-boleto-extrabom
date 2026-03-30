@@ -1,5 +1,3 @@
-import random
-
 from loguru import logger
 
 import src.config.logger
@@ -7,11 +5,12 @@ from src.apps.consinco_operador_desktop import ConsincoOperadorDesktop
 from src.apps.sinfonia_api import SinfoniaApi
 from src.config.settings import settings
 from src.packages.email import Email
+from src.tasks.acionar_nova_execucao_casos_de_erro import \
+    acionar_nova_execucao_casos_de_erro
 from src.utils.comandos_cmd import (executar_cmds_manter_sessao_ativa,
                                     fechar_sistemas_legados)
-from src.utils.tratamento_datas import (obter_datas_execucao_sucesso,
-                                        obter_qtd_especifica_datas_passadas,
-                                        salvar_datas_execucao_sucesso)
+from src.utils.tratamento_datas import (obter_datas_execucao,
+                                        salvar_datas_execucao)
 
 
 def main() -> None:
@@ -23,7 +22,7 @@ def main() -> None:
         app_consinco_operador: ConsincoOperadorDesktop = None
         msg_erro = ""
         msg_data_tratativa = f"Data considerada para consulta/tratativa: {settings.processo.data_emissao_filtro}"
-        datas_execucao_sucesso = obter_datas_execucao_sucesso(arquivo=settings.caminho.arquivo_datas_exec_sucesso)
+        datas_execucao = obter_datas_execucao(arquivo=settings.caminho.arquivo_datas_execucao)
         logger.info(msg_data_tratativa)
 
         # Inicializa variaveis para envio de e-mail
@@ -50,10 +49,9 @@ def main() -> None:
             corpo_email += f"{msg_retorno}\n"
             logger.warning(msg_retorno)
 
-        # Adiciona a data de execução no arquivo datas de execuções bem sucedidas
-        if settings.processo.data_emissao_filtro not in datas_execucao_sucesso:
-            datas_execucao_sucesso.append(settings.processo.data_emissao_filtro)
-            salvar_datas_execucao_sucesso(arquivo=settings.caminho.arquivo_datas_exec_sucesso, datas_execucao_sucesso=datas_execucao_sucesso)
+        # Adiciona a data de execução atual no arquivo datas de execuções
+        datas_execucao[settings.processo.data_emissao_filtro] = "ok"
+        salvar_datas_execucao(arquivo=settings.caminho.arquivo_datas_execucao, datas_execucao=datas_execucao)
 
         logger.success(f"Processo {nome_rpa} executado com sucesso")
 
@@ -61,6 +59,14 @@ def main() -> None:
         msg_erro = str(error)
         assunto_email += " - ERRO"
         corpo_email += f"{msg_erro}\n\n"
+
+        # Incrementa o número de tentativa de execução para a data de tratativa atual
+        tentativa_data_execucao_atual = datas_execucao.get(settings.processo.data_emissao_filtro, None)
+        if not tentativa_data_execucao_atual:
+            datas_execucao[settings.processo.data_emissao_filtro] = 1
+        else:
+            datas_execucao[settings.processo.data_emissao_filtro] += 1
+        salvar_datas_execucao(arquivo=settings.caminho.arquivo_datas_execucao, datas_execucao=datas_execucao)
 
         execucao_com_erro = True
         logger.error(f"Erro na execução do robô {nome_rpa}.\nErro: {error}")
@@ -80,19 +86,7 @@ def main() -> None:
             except Exception as error_email:
                 logger.error(f"Erro ao enviar e-mail de status: {error_email}")
 
-
-        # Valida se ha datas sem execução de sucesso para iniciar uma nova execucao no sinfonia
-        datas_execucao_sucesso = obter_datas_execucao_sucesso(arquivo=settings.caminho.arquivo_datas_exec_sucesso)
-        if datas_execucao_sucesso:
-            # Randomiza a ordem dos dados para evitar que a execução seja sempre na mesma data em caso de erros consecutivos
-            datas_cinco_dias_atras = random.sample(obter_qtd_especifica_datas_passadas(qtd=5), 5)
-
-            for data_passada in datas_cinco_dias_atras:
-                if data_passada not in datas_execucao_sucesso:
-                    logger.info(f"Iniciando nova execução do sinfonia: {data_passada}")
-                    sinfonia_api = SinfoniaApi(data_tratativa=data_passada)
-                    sinfonia_api.acionar_nova_execucao()
-                    break # Deve fazer uma execucao por vez
+        acionar_nova_execucao_casos_de_erro()
 
         logger.info("Finalizando processo...")
 
