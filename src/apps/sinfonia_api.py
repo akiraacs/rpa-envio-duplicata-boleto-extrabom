@@ -8,7 +8,13 @@ from src.models.sinfonia_payload import SinfoniaBotParams, SinfoniaPayload
 
 
 class SinfoniaApi:
+    """Classe para interagir com o Sinfonia - Módulo de API."""
     def __init__(self, data_tratativa: str):
+        """Inicializa a classe com a data de tratativa do processo.
+        
+        Args:
+            data_tratativa (str): Data de tratativa do processo.
+        """
         self.base_url = f"{settings.sinfonia.base_url}"
         self.headers = {
             "Content-Type": "application/json",
@@ -19,6 +25,7 @@ class SinfoniaApi:
 
 
     def _set_payload(self) -> dict:
+        """Define o payload para requisição no Sinfonia."""
         try:
             return SinfoniaPayload(
                 bot_name="bot-envio-boleto",
@@ -31,6 +38,7 @@ class SinfoniaApi:
 
 
     def _set_bot_params(self) -> str:
+        """Define os parâmetros do bot para requisição no Sinfonia."""
         try:
             return SinfoniaBotParams(
                 processo_data_emissao_filtro=str(self.data_tratativa),
@@ -47,6 +55,7 @@ class SinfoniaApi:
 
     @retry(stop=stop_after_attempt(3), wait=wait_fixed(2), reraise=True)
     def acionar_nova_execucao(self) -> None:
+        """Aciona uma nova execução do bot no Sinfonia."""
         try:
             response = httpx.post(
                 url=f"{settings.sinfonia.base_url}/v1/run",
