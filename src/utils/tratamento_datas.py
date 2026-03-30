@@ -26,7 +26,7 @@ def calcular_data(
     return (data_referencia + (direcao.value * timedelta(days=dias))).strftime("%d/%m/%Y")
 
 
-def obter_datas_execucao_sucesso(arquivo: str) -> list[str]:
+def obter_datas_execucao(arquivo: str) -> list[str]:
     """Lê a lista de datas de execução do arquivo JSON e retorna uma lista de strings.
 
     Args:
@@ -39,23 +39,23 @@ def obter_datas_execucao_sucesso(arquivo: str) -> list[str]:
     if not arquivo.exists():
         raise FileNotFoundError(f"Arquivo que armazena datas de execução não encontrado: {arquivo}")
 
-    return json.loads(arquivo.read_text())
+    return json.loads(arquivo.read_text(encoding="utf-8"))
 
 
-def salvar_datas_execucao_sucesso(arquivo: str, datas_execucao_sucesso: list[str]) -> None:
+def salvar_datas_execucao(arquivo: str, datas_execucao: list[str]) -> None:
     """Salva a lista de datas de execução no arquivo JSON.
 
     Args:
         arquivo (str): Caminho completo do arquivo JSON.
-        datas_execucao_sucesso (list[str]): Lista de datas de execução.
+        datas_execucao (list[str]): Lista de datas de execução.
     """
     arquivo = Path(arquivo)
     if not arquivo.exists():
         raise FileNotFoundError(f"Arquivo que armazena datas de execução não encontrado: {arquivo}")
 
-    datas_execucao_sucesso = _limpar_datas_antigas(datas_execucao_sucesso)
+    datas_execucao = _limpar_datas_antigas(datas_execucao)
 
-    arquivo.write_text(json.dumps(datas_execucao_sucesso, indent=4), encoding="utf-8")
+    arquivo.write_text(json.dumps(datas_execucao, indent=4, ensure_ascii=False), encoding="utf-8")
 
 
 def _limpar_datas_antigas(datas: list[str]) -> list[str]:
@@ -67,15 +67,5 @@ def _limpar_datas_antigas(datas: list[str]) -> list[str]:
     Returns:
         list[str]: Lista de datas limpa.
     """
-    limite = datetime.today() - timedelta(days=90)
-    return [d for d in datas if datetime.strptime(d, "%d/%m/%Y") > limite]
-
-
-def obter_qtd_especifica_datas_passadas(qtd: int) -> list[str]:
-    """Retorna as últimas `qtd` datas passadas a partir de ontem."""
-    if qtd <= 0:
-        return []
-    return [
-        (datetime.today() - timedelta(days=i)).strftime("%d/%m/%Y")
-        for i in range(1, qtd + 1)
-    ]
+    limite = datetime.today() - timedelta(days=30)
+    return {d: t for d, t in datas.items() if datetime.strptime(d, "%d/%m/%Y") > limite}
