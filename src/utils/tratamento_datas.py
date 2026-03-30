@@ -54,6 +54,7 @@ def salvar_datas_execucao(arquivo: str, datas_execucao: list[str]) -> None:
         raise FileNotFoundError(f"Arquivo que armazena datas de execução não encontrado: {arquivo}")
 
     datas_execucao = _limpar_datas_antigas(datas_execucao)
+    datas_execucao = _inicializar_datas_pendentes(datas_execucao)
 
     arquivo.write_text(json.dumps(datas_execucao, indent=4, ensure_ascii=False), encoding="utf-8")
 
@@ -69,3 +70,25 @@ def _limpar_datas_antigas(datas: list[str]) -> list[str]:
     """
     limite = datetime.today() - timedelta(days=30)
     return {d: t for d, t in datas.items() if datetime.strptime(d, "%d/%m/%Y") > limite}
+
+
+def _inicializar_datas_pendentes(datas: dict[str, int]) -> dict[str, int]:
+    datas_referencia = obter_qtd_especifica_datas_passadas(5)
+    for data in datas_referencia:
+        if data not in datas:
+            datas[data] = 0
+    return datas
+
+
+def obter_qtd_especifica_datas_passadas(qtd: int) -> list[str]:
+    """Retorna as últimas `qtd` datas passadas a partir de ontem.
+    
+    Args:
+        qtd (int): Quantidade de datas passadas a serem retornadas.
+    """
+    if qtd <= 0:
+        return []
+    return [
+        (datetime.today() - timedelta(days=i)).strftime("%d/%m/%Y")
+        for i in range(1, qtd + 1)
+    ]
