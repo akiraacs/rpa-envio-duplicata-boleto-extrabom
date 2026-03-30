@@ -2,7 +2,6 @@ from loguru import logger
 
 import src.config.logger
 from src.apps.consinco_operador_desktop import ConsincoOperadorDesktop
-from src.apps.sinfonia_api import SinfoniaApi
 from src.config.settings import settings
 from src.packages.email import Email
 from src.tasks.acionar_nova_execucao_casos_de_erro import \
