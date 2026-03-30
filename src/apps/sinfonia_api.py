@@ -1,8 +1,11 @@
+from http import HTTPStatus
+
 import httpx
 from tenacity import retry, stop_after_attempt, wait_fixed
-from http import HTTPStatus
+
 from src.config.settings import settings
-from src.models.sinfonia_payload import SinfoniaPayload, SinfoniaBotParams
+from src.models.sinfonia_payload import SinfoniaBotParams, SinfoniaPayload
+
 
 class SinfoniaApi:
     def __init__(self, data_tratativa: str):
@@ -33,7 +36,7 @@ class SinfoniaApi:
                 processo_data_emissao_filtro=str(self.data_tratativa),
                 caminho_exe_erp_modulo_operador=str(settings.caminho.exe_erp_modulo_operador),
                 caminho_onedrive_robo=str(settings.caminho.onedrive_robo),
-                caminho_arquivo_datas_exec_sucesso=str(settings.caminho.arquivo_datas_exec_sucesso),
+                caminho_arquivo_datas_execucao=str(settings.caminho.arquivo_datas_execucao),
                 enviar_email=str(settings.email.enviar_email),
                 destinatarios=str(settings.email.destinatarios),
             ).model_dump_json()

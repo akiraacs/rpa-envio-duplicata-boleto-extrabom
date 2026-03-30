@@ -9,7 +9,7 @@ class SinfoniaBotParams(BaseModel):
     # Caminhos
     caminho_exe_erp_modulo_operador: str
     caminho_onedrive_robo: str
-    caminho_arquivo_datas_exec_sucesso: str
+    caminho_arquivo_datas_execucao: str
 
     # E-mail
     enviar_email: str
