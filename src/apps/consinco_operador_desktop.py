@@ -201,12 +201,12 @@ class ConsincoOperadorDesktop:
             time.sleep(1.5)
 
             # Enviar boletos por email
-            img_btn_enviar_boletos_email = pyscreeze.locateOnScreen("resources/images/btn_enviar_boletos_email.png", confidence=0.8) # teste
+            img_btn_enviar_boletos_email = pyscreeze.locateOnScreen("resources/images/btn_enviar_boletos_email.png", confidence=0.8)
             if not img_btn_enviar_boletos_email:
                 raise Exception("Não foi possível localizar por imagem o botão 'Enviar Boletos por Email'")
             pyautogui.click(pyautogui.center(img_btn_enviar_boletos_email))
             logger.info("Botão 'Enviar Boletos por Email' clicado")
-            time.sleep(3)
+            time.sleep(2)
 
             self.janela_principal.set_focus()
             time.sleep(0.5)
@@ -229,6 +229,17 @@ class ConsincoOperadorDesktop:
                     self.janela_atencao.child_window(title="Yes", control_type="Button").click_input()
                 time.sleep(1.5)
 
+                # Janela de atenção quando nem todos os títulos foram enviados com exito
+                self.janela_principal.set_focus()
+                time.sleep(0.5)
+                self.janela_atencao = None # Reseta a janela de atencao
+                self.janela_atencao = self.janela_principal.child_window(title="Atenção", control_type="Window")
+                if self.janela_atencao.exists(timeout=2):
+                    msg_janela_atencao = self.janela_atencao.child_window(control_type="Text", found_index=1).window_text()
+                    self._fechar_janelas_atencao_aviso()
+                    return True, msg_janela_atencao
+
+                # Tela de aviso informa que os titulos foram enviados com sucesso
                 self.janela_aviso = self.janela_principal.child_window(title="Aviso", control_type="Window")
                 if not self.janela_aviso.exists(timeout=5):
                     raise Exception('Não foi possível localizar o janela de "Aviso" informando que o envio de boletos por e-mail foi agendado com sucesso')
