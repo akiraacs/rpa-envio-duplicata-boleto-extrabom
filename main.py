@@ -6,7 +6,7 @@ from src.config.settings import settings
 from src.packages.email import Email
 from src.tasks.acionar_nova_execucao_casos_de_erro import \
     acionar_nova_execucao_casos_de_erro
-from src.utils.comandos_cmd import (executar_cmds_manter_sessao_ativa,
+from src.utils.comandos_cmd import (executar_cmds_pre_execucao,
                                     fechar_sistemas_legados)
 from src.utils.tratamento_datas import (obter_datas_execucao,
                                         salvar_datas_execucao)
@@ -31,7 +31,7 @@ def main() -> None:
             f"{msg_data_tratativa}\n\n\n"
         )
 
-        executar_cmds_manter_sessao_ativa()
+        executar_cmds_pre_execucao()
         fechar_sistemas_legados()
 
         app_consinco_operador = ConsincoOperadorDesktop(exe_path=settings.caminho.exe_erp_modulo_operador)
