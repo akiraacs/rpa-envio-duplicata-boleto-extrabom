@@ -237,7 +237,7 @@ class ConsincoOperadorDesktop:
                 if self.janela_atencao.exists(timeout=2):
                     msg_janela_atencao = self.janela_atencao.child_window(control_type="Text", found_index=1).window_text()
                     self._fechar_janelas_atencao_aviso()
-                    return True, msg_janela_atencao
+                    return False, msg_janela_atencao
 
                 # Tela de aviso informa que os titulos foram enviados com sucesso
                 self.janela_aviso = self.janela_principal.child_window(title="Aviso", control_type="Window")
