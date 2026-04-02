@@ -3,6 +3,8 @@ import os
 import time
 from typing import Optional
 
+import cv2
+import numpy as np
 import pyautogui
 import pyscreeze
 import pywinauto
@@ -194,17 +196,31 @@ class ConsincoOperadorDesktop:
 
             # Selecionar todos os títulos
             img_btn_selecionar_todos_titulos = pyscreeze.locateOnScreen("resources/images/btn_selecionar_todos_titulos.png", confidence=0.8)
+            time.sleep(0.3)
             if not img_btn_selecionar_todos_titulos:
                 raise Exception("Não foi possível localizar por imagem o botão 'Selecionar Todos os Títulos'")
-            pyautogui.click(pyautogui.center(img_btn_selecionar_todos_titulos))
+
+            screen = cv2.cvtColor(np.array(pyautogui.screenshot()), cv2.COLOR_RGB2BGR)
+            result = cv2.matchTemplate(screen, cv2.imread("resources/images/btn_selecionar_todos_titulos.png"), cv2.TM_CCOEFF_NORMED)
+            score = cv2.minMaxLoc(result)[1]
+            logger.info(f"Score selecao: {score:.2%}")
+
+            pyautogui.click(img_btn_selecionar_todos_titulos)
             logger.info("Botão 'Selecionar Todos os Títulos' clicado")
             time.sleep(1.5)
 
             # Enviar boletos por email
             img_btn_enviar_boletos_email = pyscreeze.locateOnScreen("resources/images/btn_enviar_boletos_email.png", confidence=0.8)
+            time.sleep(0.3)
             if not img_btn_enviar_boletos_email:
                 raise Exception("Não foi possível localizar por imagem o botão 'Enviar Boletos por Email'")
-            pyautogui.click(pyautogui.center(img_btn_enviar_boletos_email))
+
+            screen = cv2.cvtColor(np.array(pyautogui.screenshot()), cv2.COLOR_RGB2BGR)
+            result = cv2.matchTemplate(screen, cv2.imread("resources/images/btn_selecionar_todos_titulos.png"), cv2.TM_CCOEFF_NORMED)
+            score = cv2.minMaxLoc(result)[1]
+            logger.info(f"Score enviar email: {score:.2%}")
+
+            pyautogui.click(img_btn_enviar_boletos_email)
             logger.info("Botão 'Enviar Boletos por Email' clicado")
             time.sleep(2)
 
